@@ -1,0 +1,103 @@
+// prisma/schema.prisma - Prisma 7.x compatible
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id        String    @id @default(cuid())
+  name      String
+  email     String    @unique
+  password  String?
+  isGuest   Boolean   @default(false)
+  avatarUrl String?
+  color     String    @default("#7C3AED")
+  initials  String    @default("U")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  assignedTasks Task[]    @relation("AssignedTasks")
+  comments      Comment[]
+}
+
+model Task {
+  id          String     @id @default(cuid())
+  title       String
+  description String?
+  status      TaskStatus @default(TODO)
+  priority    Priority   @default(NO_PRIORITY)
+  dueDate     DateTime?
+  order       Int        @default(0)
+
+  assigneeId  String?
+  assignee    User?      @relation("AssignedTasks", fields: [assigneeId], references: [id])
+
+  labels      TaskLabel[]
+  subtasks    Subtask[]
+  comments    Comment[]
+
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model Subtask {
+  id         String   @id @default(cuid())
+  title      String
+  priority   Priority @default(NO_PRIORITY)
+  dueDate    DateTime?
+  completed  Boolean  @default(false)
+  assigneeId String?
+
+  taskId     String
+  task       Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Label {
+  id    String      @id @default(cuid())
+  name  String      @unique
+  color String
+
+  tasks TaskLabel[]
+}
+
+model TaskLabel {
+  taskId  String
+  labelId String
+
+  task    Task  @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  label   Label @relation(fields: [labelId], references: [id], onDelete: Cascade)
+
+  @@id([taskId, labelId])
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  content   String
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id])
+  taskId    String
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum TaskStatus {
+  TODO
+  DOING
+  COMPLETED
+  BACKLOG
+}
+
+enum Priority {
+  NO_PRIORITY
+  URGENT
+  HIGH
+  MEDIUM
+  LOW
+}
