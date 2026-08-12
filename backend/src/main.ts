@@ -5,9 +5,37 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  // Allowed origins: add your Vercel URL(s) here, plus localhost for dev.
+  // FRONTEND_URL env var can be a comma-separated list of URLs.
+  const envOrigins = process.env.FRONTEND_URL
+    ? process.env.FRONTEND_URL.split(',').map((u) => u.trim())
+    : [];
+
+  const allowedOrigins = [
+    'http://localhost:3000',
+    'http://localhost:3001',
+    // Vercel production deployment
+    'https://full-stack-developer-technical-assessment-su69-2kf4vf5ll.vercel.app',
+    ...envOrigins,
+  ];
+
   app.enableCors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    origin: (origin, callback) => {
+      // Allow requests with no origin (e.g. curl, Postman, server-to-server)
+      if (!origin) return callback(null, true);
+
+      // Allow any *.vercel.app subdomain (covers preview deployments too)
+      const isVercel = /^https:\/\/[\w-]+\.vercel\.app$/.test(origin);
+
+      if (allowedOrigins.includes(origin) || isVercel) {
+        callback(null, true);
+      } else {
+        callback(new Error(`CORS: origin '${origin}' not allowed`));
+      }
+    },
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
   });
 
   app.useGlobalPipes(
