@@ -491,7 +491,7 @@ export default function TaskDetailPanel({
                     borderRadius: 8,
                     border: "1px solid var(--border-default)",
                     transition: "background 150ms",
-                    group: "subtask-row",
+                    
                   }}
                 >
                   {/* Checkbox */}

@@ -58,12 +58,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const guestLogin = async (name?: string) => {
-    const data = await api.post("/auth/guest", { name: name || "Guest" });
+    const data = await api.post<{ access_token: string; user: User }>("/auth/guest", { name: name || "Guest" });
     saveAuth(data.access_token, data.user);
   };
 
   const login = async (email: string, password: string) => {
-    const data = await api.post("/auth/login", { email, password });
+    const data = await api.post<{ access_token: string; user: User }>("/auth/login", { email, password });
     saveAuth(data.access_token, data.user);
   };
 
